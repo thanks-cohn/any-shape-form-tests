@@ -1,0 +1,112 @@
+{
+  "format": "portable-form",
+  "formatVersion": 1,
+  "form": {
+    "id": "openform-flow-reference",
+    "title": "Your next form, exactly how you need it.",
+    "description": "A beautiful, adaptable form with powerful question types and no account required.",
+    "theme": "dark",
+    "sections": [
+      {
+        "id": "contact",
+        "title": "Start with the basics",
+        "description": "A little context helps us understand your request.",
+        "fields": [
+          {
+            "id": "name",
+            "type": "text",
+            "label": "Your name",
+            "required": false
+          },
+          {
+            "id": "role",
+            "type": "radio",
+            "label": "Which best describes you?",
+            "required": false,
+            "options": [
+              "Student",
+              "Educator",
+              "Professional",
+              "Community member",
+              "Other"
+            ]
+          },
+          {
+            "id": "needs",
+            "type": "multi",
+            "label": "What are you interested in?",
+            "required": false,
+            "options": [
+              "Learning",
+              "Events",
+              "Services",
+              "Research",
+              "Collaboration",
+              "Other"
+            ]
+          },
+          {
+            "id": "topic",
+            "type": "select",
+            "label": "What's this about?",
+            "required": false,
+            "options": [
+              "General inquiry",
+              "Project",
+              "Feedback",
+              "Registration",
+              "Support",
+              "Other"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "8d2ff3d4-93e2-4ac4-9305-ab1bd646b5fd",
+        "title": "New section",
+        "description": "Help Text",
+        "fields": []
+      },
+      {
+        "id": "finish",
+        "title": "Finalize your submission",
+        "description": "You can return and change any answer before finishing.",
+        "fields": [
+          {
+            "id": "document",
+            "type": "file",
+            "label": "Attach a supporting file (session only)",
+            "required": false
+          },
+          {
+            "id": "explanation",
+            "type": "info",
+            "label": "Additional context",
+            "required": false,
+            "help": "This section can contain a short explanation or instructions without requesting an answer."
+          },
+          {
+            "id": "consent",
+            "type": "checkbox",
+            "label": "I agree to submit this information",
+            "required": true
+          }
+        ]
+      }
+    ]
+  },
+  "delivery": {
+    "protocol": "http-json",
+    "webhooks": [
+      {
+        "id": "local",
+        "name": "Test Webhook",
+        "method": "POST",
+        "url": "http://127.0.0.1:4174/receive/reject",
+        "contentType": "application/json",
+        "enabled": true,
+        "required": true
+      }
+    ]
+  }
+}
