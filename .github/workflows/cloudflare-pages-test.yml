@@ -9,10 +9,10 @@ jobs:
     environment: test
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      D1_DATABASE_ID: ${{ vars.D1_DATABASE_ID }}
-      R2_BUCKET_NAME: ${{ vars.R2_BUCKET_NAME }}
-      PAGES_PROJECT_NAME: ${{ vars.PAGES_PROJECT_NAME }}
+      CLOUDFLARE_ACCOUNT_ID: '40439992e793a00d8f33b19f898fa0c2'
+      D1_DATABASE_ID: '0d6a1b8b-d88c-4e8b-a024-294a9db468d3'
+      R2_BUCKET_NAME: 'anyshape-form-uploads'
+      PAGES_PROJECT_NAME: 'any-shape-form-tests'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
