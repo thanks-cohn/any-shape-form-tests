@@ -1,0 +1,56 @@
+name: Deploy and verify Cloudflare Pages test
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: test
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      D1_DATABASE_ID: ${{ vars.D1_DATABASE_ID }}
+      R2_BUCKET_NAME: ${{ vars.R2_BUCKET_NAME }}
+      PAGES_PROJECT_NAME: ${{ vars.PAGES_PROJECT_NAME }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check configuration
+        shell: bash
+        run: |
+          set -eu
+          for key in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID D1_DATABASE_ID R2_BUCKET_NAME; do
+            if [ -z "${!key:-}" ]; then echo "::error::Missing $key GitHub Actions secret/variable"; exit 1; fi
+          done
+      - name: Install Wrangler
+        run: npm install --no-save wrangler@4
+      - name: Prepare Pages configuration
+        shell: bash
+        run: |
+          set -eu
+          cat > wrangler.toml <<EOF
+          name = "${PAGES_PROJECT_NAME:-any-shape-form-tests}"
+          pages_build_output_dir = "."
+          compatibility_date = "2026-10-14"
+
+          [[r2_buckets]]
+          binding = "SUBMISSIONS_R2"
+          bucket_name = "${R2_BUCKET_NAME}"
+
+          [[d1_databases]]
+          binding = "SUBMISSIONS_DB"
+          database_name = "any-shape-test-submissions"
+          database_id = "${D1_DATABASE_ID}"
+          EOF
+      - name: Apply D1 table schema
+        run: npx wrangler d1 execute any-shape-test-submissions --remote --file=migrations/0001_submissions.sql
+      - name: Deploy test website
+        run: npx wrangler pages deploy . --project-name="${PAGES_PROJECT_NAME:-any-shape-form-tests}"
+      - name: Explain live verification
+        run: |
+          echo "## Deployment triggered" >> "$GITHUB_STEP_SUMMARY"
+          echo "Open the Pages URL printed above. Submit test answers and a small attachment; check receipt effects and JSON record URL." >> "$GITHUB_STEP_SUMMARY"
+          echo "R2/D1 receipt from browser is not yet independently audited by this workflow." >> "$GITHUB_STEP_SUMMARY"
