@@ -27,13 +27,17 @@ jobs:
           done
       - name: Install Wrangler
         run: npm install --no-save wrangler@4
+      - name: Prepare public website directory
+        run: |
+          mkdir -p public
+          cp index.html style.css app.js form.json public/
       - name: Prepare Pages configuration
         shell: bash
         run: |
           set -eu
           cat > wrangler.toml <<EOF
           name = "${PAGES_PROJECT_NAME:-any-shape-form-tests}"
-          pages_build_output_dir = "."
+          pages_build_output_dir = "./public"
           compatibility_date = "2026-10-14"
 
           [[r2_buckets]]
@@ -48,7 +52,7 @@ jobs:
       - name: Apply D1 table schema
         run: npx wrangler d1 execute any-shape-test-submissions --remote --file=migrations/0001_submissions.sql
       - name: Deploy test website
-        run: npx wrangler pages deploy . --project-name="${PAGES_PROJECT_NAME:-any-shape-form-tests}"
+        run: npx wrangler pages deploy public --project-name="${PAGES_PROJECT_NAME:-any-shape-form-tests}"
       - name: Explain live verification
         run: |
           echo "## Deployment triggered" >> "$GITHUB_STEP_SUMMARY"
