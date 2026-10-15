@@ -96,17 +96,8 @@
     ]
   },
   "delivery": {
-    "protocol": "http-json",
-    "webhooks": [
-      {
-        "id": "local",
-        "name": "Test Webhook",
-        "method": "POST",
-        "url": "http://127.0.0.1:4174/receive/reject",
-        "contentType": "application/json",
-        "enabled": true,
-        "required": true
-      }
-    ]
+    "protocol": "cloudflare-pages",
+    "endpoint": "/api/submit",
+    "webhooks": []
   }
 }
