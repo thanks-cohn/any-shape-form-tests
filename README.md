@@ -1,31 +1,34 @@
-# Deploy this form
+# Any-Shape Flow — Cloudflare Deployment Test
 
-Upload `index.html`, `style.css`, `app.js`, and `form.json` together to any static web host, including GitHub Pages. Open the hosted HTTPS URL. Do not open `index.html` directly using file:// because browsers can block loading `form.json`.
+**Experimental deployment with real R2/D1 handlers.** The original exported frontend has been adapted to submit through a same-origin Pages Function. This is a test repository, **not yet an independently verified live deployment**. Use only synthetic submissions and files.
 
-There is no editor, settings panel, admin route, analytics or vendor branding in the public site. To change the form later, edit `form.json` directly and redeploy the files.
+## One-time setup — GitHub Actions
 
-## Webhook delivery
-The only default delivery mechanism is the configured HTTP(S) JSON POST webhooks in `form.json` under `delivery.webhooks`. Browser-local storage is deliberately excluded. The public form sends:
+1. In this repository open **Settings → Secrets and variables → Actions**.
+2. Under **Secrets**, add `CLOUDFLARE_API_TOKEN` with a scoped Cloudflare API token. Never paste the token in committed files or chat.
+3. Under **Variables**, add:
+   - `CLOUDFLARE_ACCOUNT_ID` — your Cloudflare account ID.
+   - `D1_DATABASE_ID` — UUID of the existing D1 database `any-shape-test-submissions`.
+   - `R2_BUCKET_NAME` — exact name of an existing Cloudflare R2 bucket.
+   - `PAGES_PROJECT_NAME` — optional, defaults to `any-shape-form-tests`.
+4. Ensure the Cloudflare Pages project has already been created for this **direct-upload/Wrangler deployment workflow**. A Git-integrated Pages project may use a different deployment setup; do not mix incompatible project types.
+5. Open **Actions → Deploy and verify Cloudflare Pages test → Run workflow**. Monitor the logs. This workflow creates an ephemeral Wrangler configuration on the runner, applies the D1 schema, and deploys the project.
 
-- Method: POST
-- Request headers: `Content-Type: application/json`, `Accept: application/json`
-- JSON body: `{schemaVersion, formId, id, submittedAt, answers}`
-- Expected response: HTTP 2xx. A 2xx acknowledges HTTP receipt, not downstream business completion.
+The token exists only inside GitHub Actions when a workflow runs. It is **not** included in downloaded ZIPs, JavaScript, or any browser request.
 
-## CORS configuration for the receiving service
-Your webhook receiver must allow the **deployed website origin**, not just localhost.
+## Live check
 
-Typical CORS preflight request: `OPTIONS /your-path` with `Origin: https://your-domain.example`, `Access-Control-Request-Method: POST`, and `Access-Control-Request-Headers: content-type`.
+Open the Cloudflare Pages URL printed by the workflow. Complete the Flow form using synthetic answers, attach a small text or image file, and submit. The receipt must report `r2: accepted` and `d1: accepted`, with an individual `recordUrl`. Open that record URL and verify that the JSON matches the answers and includes actual attachment metadata. Use the R2 dashboard to verify stored objects under `Submitted-Files/<type>/<formId>/<submissionId>/`. The D1 table should contain the submission JSON.
 
-Typical response headers from the server for OPTIONS and the POST response:
-```
-Access-Control-Allow-Origin: https://your-domain.example
-Access-Control-Allow-Methods: POST, OPTIONS
-Access-Control-Allow-Headers: Content-Type, Accept
-Vary: Origin
-```
-Return HTTP 204 for OPTIONS where appropriate. Use an explicit trusted origin rather than a wildcard when credentials or sensitive contexts are involved. This form intentionally omits browser credentials. Browsers control the Origin header; don't try to set it in JavaScript.
+**Status honesty:** No real Cloudflare workflow run or full end-to-end verification has been observed in this chat. A successful GitHub Actions deployment does not, by itself, prove that R2 and D1 submissions work. The workflow currently provisions the D1 table and deploys; it does **not yet execute automated live submission/GET verification**. Do not claim that all three Any-Shape exporters have this backend; this repository is a focused experiment on Flow.
 
-**Security:** Never put tokens, passwords, signing keys, or privileged service credentials in `form.json` or client JavaScript. Use a server-side relay if the receiver requires secrets, does not support CORS, or needs anti-spam, durable persistence, authorization, verified downstream processing, or idempotent delivery. Do not expose unrestricted privileged webhooks directly to public visitors.
+## Architecture
 
-**Capability limits:** The exported runtime supports standard fields, select/multiple choice, matrix, conditions, repeated sections, simple line items and JSON submissions. Some richer editor-specific semantics (e.g. full drag-ranking, actual file uploads, cryptographic signatures, sophisticated branching) require future audited adapters and must not be assumed equivalent. Test your exported form before deploying it publicly.
+- Static exported form: `index.html`, `style.css`, `app.js`, `form.json`.
+- `functions/api/submit.js`: accepts multipart submission JSON and files, writes JSON to R2 and D1.
+- `functions/api/submissions/[[id]].js`: resolves stored JSON by ID from D1 or R2.
+- `functions/api/file-routing.js`: routes attachments by content category under `Submitted-Files/`.
+- `migrations/0001_submissions.sql`: repeatable database table/index creation.
+- `.github/workflows/cloudflare-pages-test.yml`: deploys via GitHub Actions using secret and variables.
+
+The stable, portable behavioral contract should ultimately move back into the shared Any-Shape exporter after we capture successful live evidence. This test repository should not become a second long-term implementation.
